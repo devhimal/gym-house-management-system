@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Trainers</h1>
+        <a href="{{ url_for('main.add_trainer') }}" class="btn btn-primary">Add New Trainer</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if trainers %}
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Specialization</th>
+                    <th>Schedule</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trainer in trainers %}
+                    <tr>
+                        <td>{{ trainer.id }}</td>
+                        <td>{{ trainer.name }}</td>
+                        <td>{{ trainer.specialization }}</td>
+                        <td>{{ trainer.schedule if trainer.schedule else 'N/A' }}</td>
+                        <td>
+                            <a href="{{ url_for('main.edit_trainer', trainer_id=trainer.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <form action="{{ url_for('main.delete_trainer', trainer_id=trainer.id) }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this trainer?');">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No trainers found. <a href="{{ url_for('main.add_trainer') }}">Add the first trainer!</a></p>
+    {% endif %}
+{% endblock %}

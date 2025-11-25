@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Member Profile: {{ member.name }}</h1>
+        <div>
+            <a href="{{ url_for('main.edit_member', member_id=member.id) }}" class="btn btn-warning">Edit Member</a>
+            <form action="{{ url_for('main.delete_member', member_id=member.id) }}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this member?');">Delete Member</button>
+            </form>
+            <a href="{{ url_for('main.list_members') }}" class="btn btn-secondary">Back to Members</a>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Member Details
+        </div>
+        <div class="card-body">
+            <p><strong>ID:</strong> {{ member.id }}</p>
+            <p><strong>Name:</strong> {{ member.name }}</p>
+            <p><strong>Email:</strong> {{ member.email }}</p>
+            <p><strong>Phone:</strong> {{ member.phone }}</p>
+            <p><strong>Join Date:</strong> {{ member.join_date.strftime('%Y-%m-%d') }}</p>
+            <p><strong>Membership Status:</strong> 
+                {% if member.is_membership_active() %}
+                    <span class="badge bg-success">Active</span>
+                {% else %}
+                    <span class="badge bg-danger">Expired/Inactive</span>
+                {% endif %}
+            </p>
+            <p><strong>Membership Plan:</strong> 
+                {% if member.membership_plan %}
+                    {{ member.membership_plan.name }} ({{ member.membership_plan.price }} / {{ member.membership_plan.duration_days }} days)
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Membership Period:</strong> 
+                {% if member.membership_start_date and member.membership_end_date %}
+                    {{ member.membership_start_date.strftime('%Y-%m-%d') }} to {{ member.membership_end_date.strftime('%Y-%m-%d') }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Assigned Trainer:</strong> 
+                {% if member.trainer %}
+                    {{ member.trainer.name }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Workout Plan:</strong> 
+                {% if member.workout_plan %}
+                    {{ member.workout_plan.name }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Payments
+        </div>
+        <div class="card-body">
+            {% if member.payments.all() %}
+                <ul class="list-group">
+                    {% for payment in member.payments %}
+                        <li class="list-group-item">
+                            Amount: {{ payment.amount }} - Date: {{ payment.payment_date.strftime('%Y-%m-%d') }} - Plan: {{ payment.plan.name if payment.plan else 'N/A' }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No payments recorded for this member.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header">
+            Attendance
+        </div>
+        <div class="card-body">
+            {% if member.attendances.all() %}
+                <ul class="list-group">
+                    {% for attendance in member.attendances %}
+                        <li class="list-group-item">
+                            Check-in: {{ attendance.check_in_time.strftime('%Y-%m-%d %H:%M') }}
+                            {% if attendance.check_out_time %}
+                                - Check-out: {{ attendance.check_out_time.strftime('%Y-%m-%d %H:%M') }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No attendance recorded for this member.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

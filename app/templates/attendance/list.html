@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>Attendance Records</h1>
+        <a href="{{ url_for('main.check_in') }}" class="btn btn-primary">Record Check-in</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if attendance_records %}
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Member</th>
+                    <th>Check-in Time</th>
+                    <th>Check-out Time</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendance_records %}
+                    <tr>
+                        <td>{{ record.id }}</td>
+                        <td><a href="{{ url_for('main.view_member', member_id=record.member.id) }}">{{ record.member.name }}</a></td>
+                        <td>{{ record.check_in_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            {% if record.check_out_time %}
+                                {{ record.check_out_time.strftime('%Y-%m-%d %H:%M') }}
+                            {% else %}
+                                <span class="badge bg-info">Not Checked Out</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not record.check_out_time %}
+                                <form action="{{ url_for('main.check_out', attendance_id=record.id) }}" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-success">Check Out</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No attendance records found yet. <a href="{{ url_for('main.check_in') }}">Record the first check-in!</a></p>
+    {% endif %}
+{% endblock %}
