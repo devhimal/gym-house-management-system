@@ -109,7 +109,9 @@
               >
             </li>
             <li class="nav-item">
+              {% if current_user.member_id %}
               <a class="nav-link" href="{{ url_for('main.view_member', member_id=current_user.member_id) }}">My Profile</a>
+              {% endif %}
               {# This needs to be linked to the member associated with the user
               #}
             </li>

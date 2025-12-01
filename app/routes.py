@@ -29,9 +29,8 @@ def register():
             if member:
                 user.member_id = member.id
             else:
-                flash('No existing member found with this email. Please register as a normal user or ensure your member profile exists.', 'warning')
-                # Optionally, prevent registration as subscription if no member profile exists
-                # For now, we'll allow it but without linking
+                flash('Cannot register as a Subscription user. No member profile found with the provided email. Please contact an administrator to create a member profile for you.', 'danger')
+                return redirect(url_for('main.register')) # Redirect back to registration
         
         db.session.add(user)
         db.session.commit()
