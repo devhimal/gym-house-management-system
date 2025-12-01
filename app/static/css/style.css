@@ -68,13 +68,4 @@ body {
 .card.bg-warning .card-header { background-color: #ffc107 !important; }
 .card.bg-danger .card-header { background-color: #dc3545 !important; }
 
-/* Footer styling */
-footer {
-    background-color: #212529 !important; /* Darker footer */
-    color: #ffffff !important;
-    padding: 2rem 0;
-}
 
-footer p {
-    margin-bottom: 0.5rem;
-}

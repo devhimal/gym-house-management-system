@@ -19,7 +19,7 @@
     {# Custom CSS #}
     <title>Gym House Management System - {{ title }}</title>
   </head>
-  <body>
+  <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
       <div class="container-fluid">
         <a class="navbar-brand" href="{{ url_for('main.home') }}">Gym House</a>
@@ -135,14 +135,16 @@
       </div>
     </nav>
 
-    <div class="container mt-4">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    <main class="flex-grow-1">
+      <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %} {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-      {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
-    </div>
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %} {% endif %} {% endwith %} {% block content %}{% endblock %}
+      </div>
+    </main>
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
+    <footer class="bg-dark text-white text-center py-3">
       <div class="container">
         <p>&copy; 2025 Gym House. All rights reserved.</p>
         <p>Contact: info@gymhouse.com | Phone: (123) 456-7890</p>
