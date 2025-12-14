@@ -81,12 +81,23 @@ class WorkoutPlan(db.Model):
     def __repr__(self):
         return f'<WorkoutPlan {self.name}>'
 
+class Inquiry(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(20))
+    message = db.Column(db.Text)
+    submitted_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<Inquiry {self.name}>'
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default='normal') # 'admin', 'subscription', 'normal'
+    role = db.Column(db.String(20), nullable=False, default='subscription') # 'admin', 'subscription'
     member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=True) # New field
     member = db.relationship('Member', backref='user', uselist=False) # Relationship
 

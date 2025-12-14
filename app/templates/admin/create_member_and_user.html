@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-5">
+                <div class="card-header">
+                    <h3 class="text-center">Create Member and User</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <fieldset>
+                                    <legend>Member Details</legend>
+                                    <div class="mb-3">
+                                        {{ form.name.label(class="form-label") }}
+                                        {{ form.name(class="form-control") }}
+                                        {% for error in form.name.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.email.label(class="form-label") }}
+                                        {{ form.email(class="form-control") }}
+                                        {% for error in form.email.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.phone.label(class="form-label") }}
+                                        {{ form.phone(class="form-control") }}
+                                        {% for error in form.phone.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.membership_plan.label(class="form-label") }}
+                                        {{ form.membership_plan(class="form-select") }}
+                                        {% for error in form.membership_plan.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.membership_start_date.label(class="form-label") }}
+                                        {{ form.membership_start_date(class="form-control") }}
+                                        {% for error in form.membership_start_date.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.membership_end_date.label(class="form-label") }}
+                                        {{ form.membership_end_date(class="form-control") }}
+                                        {% for error in form.membership_end_date.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.trainer.label(class="form-label") }}
+                                        {{ form.trainer(class="form-select") }}
+                                        {% for error in form.trainer.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.workout_plan.label(class="form-label") }}
+                                        {{ form.workout_plan(class="form-select") }}
+                                        {% for error in form.workout_plan.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </fieldset>
+                            </div>
+                            <div class="col-md-6">
+                                <fieldset>
+                                    <legend>User Details</legend>
+                                    <div class="mb-3">
+                                        {{ form.username.label(class="form-label") }}
+                                        {{ form.username(class="form-control") }}
+                                        {% for error in form.username.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.password.label(class="form-label") }}
+                                        {{ form.password(class="form-control") }}
+                                        {% for error in form.password.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        {{ form.password2.label(class="form-label") }}
+                                        {{ form.password2(class="form-control") }}
+                                        {% for error in form.password2.errors %}
+                                            <span class="text-danger">{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

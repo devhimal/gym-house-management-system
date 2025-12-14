@@ -4,6 +4,13 @@ from wtforms.validators import DataRequired, Email, Optional, NumberRange, Equal
 from app.models import MembershipPlan, Trainer, WorkoutPlan, Member, User # Import User
 from datetime import date, datetime
 
+class InquiryForm(FlaskForm):
+    name = StringField('Full Name', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone = StringField('Phone Number', validators=[Optional()])
+    message = TextAreaField('Message', validators=[Optional()])
+    submit = SubmitField('Submit Inquiry')
+
 class MemberForm(FlaskForm):
     name = StringField('Full Name', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -29,6 +36,23 @@ class MemberForm(FlaskForm):
 
         self.workout_plan.choices = [(wp.id, wp.name) for wp in WorkoutPlan.query.order_by('name').all()]
         self.workout_plan.choices.insert(0, (0, 'Select a workout plan'))
+
+class MemberAndUserForm(MemberForm):
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField(
+        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Create Member and User')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different username.')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is not None:
+            raise ValidationError('Please use a different email address.')
 
 class MembershipPlanForm(FlaskForm):
     name = StringField('Plan Name', validators=[DataRequired()])
@@ -73,14 +97,13 @@ class WorkoutPlanForm(FlaskForm):
     routines = TextAreaField('Routines', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-class RegistrationForm(FlaskForm):
+class AdminRegistrationForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField(
         'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    role = SelectField('Role', choices=[('normal', 'Normal User'), ('subscription', 'Subscription User'), ('admin', 'Admin')], validators=[DataRequired()])
-    submit = SubmitField('Register')
+    submit = SubmitField('Create Admin')
 
     def validate_username(self, username):
         user = User.query.filter_by(username=username.data).first()
@@ -91,6 +114,8 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email address.')
+
+
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])

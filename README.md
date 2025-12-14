@@ -98,19 +98,29 @@ pip install -r requirements.txt
 
 ### 4. Initialize and Migrate the Database
 
-Set up the database schema using Flask-Migrate:
+Set up the database schema using Flask-Migrate. If this is your first time setting up the project, you'll need to initialize the migration repository:
 
 ```bash
 export FLASK_APP=run.py # On Windows: set FLASK_APP=run.py
+flask db init
+flask db migrate -m "Initial migration"
 flask db upgrade
 ```
-*(If this is the very first time setting up, you might need `flask db init` and `flask db migrate -m "Initial migration"` before `flask db upgrade`)*
+
+After any changes to `app/models.py`, you will need to create a new migration and upgrade the database:
+
+```bash
+export FLASK_APP=run.py # On Windows: set FLASK_APP=run.py
+flask db migrate -m "A meaningful message about your changes"
+flask db upgrade
+```
 
 ### 5. Running the Application
 
 Start the Flask development server:
 
 ```bash
+export FLASK_APP=run.py # On Windows: set FLASK_APP=run.py
 flask run
 ```
 
@@ -128,8 +138,8 @@ Open your web browser and navigate to `http://127.0.0.1:5000/`.
 *   **Subscription User:**
     *   Can view the public home page.
     *   Can view all Membership Plans (`/plans`).
-    *   Can view their assigned Trainer (`/trainers`).
-    *   Can view their assigned Workout Plan (`/workout_plans`).
+    *   Can view all Trainers (`/trainers`).
+    *   Can view all Workout Plans (`/workout_plans`).
     *   Can view their own Payment History (`/payments`).
     *   Can view their own Attendance Records (`/attendance`).
     *   Can view their own Member Profile (`/members/<member_id>`).
@@ -138,48 +148,20 @@ Open your web browser and navigate to `http://127.0.0.1:5000/`.
     *   Has full access to all features and management functionalities.
     *   Can access the Admin Dashboard (`/dashboard`).
     *   Can perform all CRUD operations on Members, Plans, Payments, Attendance, Trainers, and Workout Plans.
+    *   Can create new Admin users via `/admin/create_admin`.
+    *   Can create new Members and their associated Subscription User accounts via `/admin/create_member_and_user`.
+    *   Can view inquiries via `/admin/inquiries`.
 
 ### Important Notes for Testing
 
-*   **Register an Admin User first:** To gain full access to the management features, register a user with the `Admin` role via `http://127.0.0.1:5000/register`.
-*   **Link Subscription Users to Members:** When registering a `Subscription User`, ensure their email matches an existing `Member`'s email in the system. This links their user account to their member profile, allowing them to view their specific data. You can create `Member` profiles via the admin panel after logging in as an admin.
-
-## Project Structure
-
-```
-gym-house-management-system/
-├── app/
-│   ├── __init__.py           # Application factory, Flask extensions setup
-│   ├── models.py             # SQLAlchemy database models
-│   ├── forms.py              # WTForms for web forms
-│   ├── routes.py             # Flask routes and view functions
-│   ├── static/               # Static files (CSS, JS, images)
-│   │   └── css/
-│   │       └── style.css     # Custom CSS
-│   └── templates/            # Jinja2 HTML templates
-│       ├── auth/             # Authentication templates (login, register)
-│       ├── errors/           # Error pages (e.g., 403.html)
-│       ├── members/          # Member management templates
-│       ├── plans/            # Membership plan templates
-│       ├── payments/         # Payment management templates
-│       ├── attendance/       # Attendance tracking templates
-│       ├── trainers/         # Trainer management templates
-│       ├── workout_plans/    # Workout plan templates
-│       ├── admin_dashboard.html # Admin dashboard template
-│       ├── base.html         # Base layout template
-│       └── home.html         # Public marketing home page
-├── migrations/               # Alembic database migration scripts
-├── instance/                 # Instance folder (contains SQLite database)
-├── config.py                 # Application configuration
-├── run.py                    # Entry point to run the Flask application
-├── requirements.txt          # Python dependencies
-└── .gitignore                # Specifies intentionally untracked files to ignore
-```
-
-## License
-
-This project is open-source and available under the MIT License.
-
-## Contact
-
-For any questions or feedback, please contact [Your Name/Email/GitHub Profile].
+*   **Create an Admin User:** To gain full access to the management features, you must first create an admin user. If you don't have one, you can create one by running the `create_admin.py` script (if it exists and you haven't run it before) or by manually inserting a user into the database with `role='admin'`.
+    *   **Default Admin (if created by script):**
+        *   Username: `admin`
+        *   Email: `admin@example.com`
+        *   Password: `admin`
+*   **Creating Members and Subscription Users:**
+    *   Use the `/admin/create_member_and_user` route (accessible after logging in as an admin) to create new member profiles and their associated subscription user accounts.
+    *   The system will automatically link the created user to the member profile.
+*   **Submitting Inquiries:**
+    *   Users can submit inquiries via the `/inquiry` route (linked from the "Join Now" button on the home page).
+    *   Admins can view submitted inquiries on the dashboard or directly via `/admin/inquiries`.

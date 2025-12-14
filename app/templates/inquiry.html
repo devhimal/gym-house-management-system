@@ -4,15 +4,15 @@
         <div class="col-md-6">
             <div class="card mt-5">
                 <div class="card-header">
-                    <h3 class="text-center">Register</h3>
+                    <h3 class="text-center">Submit Inquiry</h3>
                 </div>
                 <div class="card-body">
                     <form method="POST">
                         {{ form.hidden_tag() }}
                         <div class="mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
-                            {% for error in form.username.errors %}
+                            {{ form.name.label(class="form-label") }}
+                            {{ form.name(class="form-control") }}
+                            {% for error in form.name.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -24,23 +24,16 @@
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control") }}
-                            {% for error in form.password.errors %}
+                            {{ form.phone.label(class="form-label") }}
+                            {{ form.phone(class="form-control") }}
+                            {% for error in form.phone.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
                         <div class="mb-3">
-                            {{ form.password2.label(class="form-label") }}
-                            {{ form.password2(class="form-control") }}
-                            {% for error in form.password2.errors %}
-                                <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="mb-3">
-                            {{ form.role.label(class="form-label") }}
-                            {{ form.role(class="form-select") }}
-                            {% for error in form.role.errors %}
+                            {{ form.message.label(class="form-label") }}
+                            {{ form.message(class="form-control", rows=5) }}
+                            {% for error in form.message.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
                         </div>
@@ -48,9 +41,6 @@
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
-                </div>
-                <div class="card-footer text-center">
-                    Already have an account? <a href="{{ url_for('main.login') }}">Log In</a>
                 </div>
             </div>
         </div>

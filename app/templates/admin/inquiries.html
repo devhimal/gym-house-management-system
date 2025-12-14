@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Inquiries</h1>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Message</th>
+                <th>Submitted At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inquiry in inquiries %}
+                <tr>
+                    <td>{{ inquiry.id }}</td>
+                    <td>{{ inquiry.name }}</td>
+                    <td>{{ inquiry.email }}</td>
+                    <td>{{ inquiry.phone }}</td>
+                    <td>{{ inquiry.message }}</td>
+                    <td>{{ inquiry.submitted_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, make_response
 from app import db, bcrypt
-from app.models import Member, MembershipPlan, Trainer, WorkoutPlan, Payment, Attendance, User
-from app.forms import MemberForm, MembershipPlanForm, PaymentForm, AttendanceForm, TrainerForm, WorkoutPlanForm, RegistrationForm, LoginForm
+from app.models import Member, MembershipPlan, Trainer, WorkoutPlan, Payment, Attendance, User, Inquiry
+from app.forms import MemberForm, MembershipPlanForm, PaymentForm, AttendanceForm, TrainerForm, WorkoutPlanForm, LoginForm, AdminRegistrationForm, MemberAndUserForm, InquiryForm
 from datetime import datetime, timedelta
 from flask_login import login_user, current_user, logout_user, login_required
 
@@ -13,43 +13,64 @@ def home():
     # This will be the public marketing page
     return render_template('home.html', title='Welcome to Gym House')
 
+@bp.route('/inquiry', methods=['GET', 'POST'])
+def inquiry():
+    form = InquiryForm()
+    if form.validate_on_submit():
+        inquiry = Inquiry(
+            name=form.name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            message=form.message.data
+        )
+        db.session.add(inquiry)
+        db.session.commit()
+        flash('Your inquiry has been submitted successfully!', 'success')
+        return redirect(url_for('main.home'))
+    return render_template('inquiry.html', title='Submit Inquiry', form=form)
+
 # --- Authentication Routes ---
 
-@bp.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.home'))
-    form = RegistrationForm()
+
+
+@bp.route('/admin/create_admin', methods=['GET', 'POST'])
+@login_required
+def create_admin():
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    form = AdminRegistrationForm()
     if form.validate_on_submit():
-        user = User(username=form.username.data, email=form.email.data, role=form.role.data)
-        user.set_password(form.password.data)
-        
-        if user.role == 'subscription':
-            member = Member.query.filter_by(email=user.email).first()
-            if member:
-                user.member_id = member.id
-            else:
-                flash('Cannot register as a Subscription user. No member profile found with the provided email. Please contact an administrator to create a member profile for you.', 'danger')
-                return redirect(url_for('main.register')) # Redirect back to registration
+        user = User(username=form.username.data, email=form.email.data, role='admin')
+        password = form.password.data
+        user.set_password(password)
         
         db.session.add(user)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
-        return redirect(url_for('main.login'))
-    return render_template('auth/register.html', title='Register', form=form)
+
+        flash('Admin account created successfully!', 'success')
+        return redirect(url_for('main.dashboard'))
+    return render_template('auth/create_admin.html', title='Create Admin User', form=form)
+
+
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.home')) # Redirect to home if already logged in
+        if current_user.role == 'admin':
+            return redirect(url_for('main.dashboard'))
+        else:
+            return redirect(url_for('main.home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
             next_page = request.args.get('next')
-            flash('Logged in successfully!', 'success')
-            return redirect(next_page or url_for('main.home'))
+            if user.role == 'admin':
+                return redirect(next_page or url_for('main.dashboard'))
+            else:
+                return redirect(next_page or url_for('main.home'))
         else:
             flash('Login Unsuccessful. Please check username and password', 'danger')
     return render_template('auth/login.html', title='Login', form=form)
@@ -78,6 +99,7 @@ def dashboard():
     ).count()
 
     total_revenue = db.session.query(db.func.sum(Payment.amount)).scalar() or 0
+    inquiries_count = Inquiry.query.count()
 
     expiring_members = Member.query.filter(
         Member.membership_end_date >= today,
@@ -94,8 +116,54 @@ def dashboard():
                            active_members=active_members,
                            today_checkins=today_checkins,
                            total_revenue=total_revenue,
+                           inquiries_count=inquiries_count,
                            expiring_members=expiring_members,
                            members_needing_renewal=members_needing_renewal)
+
+@bp.route('/admin/inquiries')
+@login_required
+def list_inquiries():
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    inquiries = Inquiry.query.order_by(Inquiry.submitted_at.desc()).all()
+    return render_template('admin/inquiries.html', title='Inquiries', inquiries=inquiries)
+
+@bp.route('/admin/create_member_and_user', methods=['GET', 'POST'])
+@login_required
+def create_member_and_user():
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    form = MemberAndUserForm()
+    if form.validate_on_submit():
+        member = Member(
+            name=form.name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            join_date=form.membership_start_date.data,
+            membership_start_date=form.membership_start_date.data,
+            membership_end_date=form.membership_end_date.data,
+            membership_plan_id=form.membership_plan.data if form.membership_plan.data != 0 else None,
+            trainer_id=form.trainer.data if form.trainer.data != 0 else None,
+            workout_plan_id=form.workout_plan.data if form.workout_plan.data != 0 else None
+        )
+        db.session.add(member)
+        db.session.commit()
+
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            role='subscription'
+        )
+        user.set_password(form.password.data)
+        user.member_id = member.id
+        db.session.add(user)
+        db.session.commit()
+
+        flash('Member and user account created successfully!', 'success')
+        return redirect(url_for('main.list_members'))
+    return render_template('admin/create_member_and_user.html', title='Create Member and User', form=form)
 
 # --- Member Management Routes ---
 
@@ -171,6 +239,45 @@ def edit_member(member_id):
         flash('Member updated successfully!', 'success')
         return redirect(url_for('main.view_member', member_id=member.id))
     return render_template('members/form.html', title=f'Edit Member: {member.name}', form=form, member=member)
+
+@bp.route('/members/export/<int:member_id>')
+@login_required
+def export_member(member_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    member = Member.query.get_or_404(member_id)
+    
+    # Create a string with member details
+    details = f"Member ID: {member.id}\n"
+    details += f"Name: {member.name}\n"
+    details += f"Email: {member.email}\n"
+    details += f"Phone: {member.phone}\n"
+    details += f"Join Date: {member.join_date.strftime('%Y-%m-%d') if member.join_date else 'N/A'}\n"
+    
+    if member.membership_plan:
+        details += f"Membership Plan: {member.membership_plan.name}\n"
+        details += f"Membership Start Date: {member.membership_start_date.strftime('%Y-%m-%d') if member.membership_start_date else 'N/A'}\n"
+        details += f"Membership End Date: {member.membership_end_date.strftime('%Y-%m-%d') if member.membership_end_date else 'N/A'}\n"
+    else:
+        details += "Membership Plan: N/A\n"
+        
+    if member.trainer:
+        details += f"Trainer: {member.trainer.name}\n"
+    else:
+        details += "Trainer: N/A\n"
+        
+    if member.workout_plan:
+        details += f"Workout Plan: {member.workout_plan.name}\n"
+    else:
+        details += "Workout Plan: N/A\n"
+        
+    # Create a response with the text file
+    response = make_response(details)
+    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Disposition'] = f'attachment; filename=member_{member.id}_details.txt'
+    
+    return response
 
 @bp.route('/members/delete/<int:member_id>', methods=['POST'])
 @login_required
@@ -374,15 +481,7 @@ def list_trainers():
         flash('Access denied. Admins and Subscription users only.', 'danger')
         abort(403)
     
-    if current_user.role == 'subscription':
-        # Subscription users can only see their assigned trainer
-        member = Member.query.filter_by(email=current_user.email).first()
-        if member and member.trainer:
-            trainers = [member.trainer]
-        else:
-            trainers = []
-    else: # Admin
-        trainers = Trainer.query.all()
+    trainers = Trainer.query.all()
     
     return render_template('trainers/list.html', title='Trainers', trainers=trainers)
 
@@ -446,15 +545,7 @@ def list_workout_plans():
         flash('Access denied. Admins and Subscription users only.', 'danger')
         abort(403)
     
-    if current_user.role == 'subscription':
-        # Subscription users can only see their assigned workout plan
-        member = Member.query.filter_by(email=current_user.email).first()
-        if member and member.workout_plan:
-            workout_plans = [member.workout_plan]
-        else:
-            workout_plans = []
-    else: # Admin
-        workout_plans = WorkoutPlan.query.all()
+    workout_plans = WorkoutPlan.query.all()
     
     return render_template('workout_plans/list.html', title='Workout Plans', workout_plans=workout_plans)
 
