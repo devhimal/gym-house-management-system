@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="container mt-4">
+        <h2>{{ title }}</h2>
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.user.label(class="form-label") }}
+                {{ form.user(class="form-select") }}
+                {% for error in form.user.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.goal_type.label(class="form-label") }}
+                {{ form.goal_type(class="form-select") }}
+                {% for error in form.goal_type.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control") }}
+                {% for error in form.description.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.target_value.label(class="form-label") }}
+                {{ form.target_value(class="form-control") }}
+                {% for error in form.target_value.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.unit.label(class="form-label") }}
+                {{ form.unit(class="form-control") }}
+                {% for error in form.unit.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                {{ form.end_date.label(class="form-label") }}
+                {{ form.end_date(class="form-control") }}
+                {% for error in form.end_date.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="mb-3 form-check">
+                {{ form.is_admin_set(class="form-check-input") }}
+                {{ form.is_admin_set.label(class="form-check-label") }}
+            </div>
+            <div class="mb-3 form-check">
+                {{ form.is_beginner_goal(class="form-check-input") }}
+                {{ form.is_beginner_goal.label(class="form-check-label") }}
+            </div>
+            {{ form.submit(class="btn btn-primary") }}
+        </form>
+    </div>
+{% endblock %}

@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, make_response
 from app import db, bcrypt
-from app.models import Member, MembershipPlan, Trainer, WorkoutPlan, Payment, Attendance, User, Inquiry
-from app.forms import MemberForm, MembershipPlanForm, PaymentForm, AttendanceForm, TrainerForm, WorkoutPlanForm, LoginForm, AdminRegistrationForm, MemberAndUserForm, InquiryForm
+from app.models import Member, MembershipPlan, Trainer, WorkoutPlan, Payment, Attendance, User, Inquiry, Goal
+from app.forms import MemberForm, MembershipPlanForm, PaymentForm, AttendanceForm, TrainerForm, WorkoutPlanForm, LoginForm, AdminRegistrationForm, MemberAndUserForm, InquiryForm, GoalForm, AdminGoalForm
 from datetime import datetime, timedelta
 from flask_login import login_user, current_user, logout_user, login_required
+import json
 
 bp = Blueprint('main', __name__)
 
@@ -599,3 +600,244 @@ def delete_workout_plan(plan_id):
         db.session.commit()
         flash('Workout plan deleted successfully!', 'success')
     return redirect(url_for('main.list_workout_plans'))
+
+# --- Goal Management Routes (User) ---
+
+@bp.route('/goals')
+@login_required
+def list_goals():
+    if current_user.role not in ['admin', 'subscription']:
+        flash('Access denied. Admins and Subscription users only.', 'danger')
+        abort(403)
+    
+    if current_user.role == 'subscription':
+        goals = Goal.query.filter_by(user_id=current_user.id).order_by(Goal.end_date.desc()).all()
+    else: # Admin
+        goals = Goal.query.order_by(Goal.end_date.desc()).all()
+
+    # Prepare data for category-based charting
+    chart_data_by_type = {}
+    goal_types = ['daily', 'weekly', 'monthly', 'yearly']
+
+    for goal_type in goal_types:
+        filtered_goals = [g for g in goals if g.goal_type == goal_type]
+        if filtered_goals:
+            chart_data_by_type[goal_type] = {
+                'labels': [goal.description for goal in filtered_goals],
+                'current_values': [goal.current_value for goal in filtered_goals],
+                'target_values': [goal.target_value for goal in filtered_goals]
+            }
+    
+    return render_template('goals/list.html', title='My Goals', goals=goals, 
+                           chart_data_by_type=chart_data_by_type)
+
+@bp.route('/goals/add', methods=['GET', 'POST'])
+@login_required
+def add_goal():
+    if current_user.role not in ['admin', 'subscription']:
+        flash('Access denied. Admins and Subscription users only.', 'danger')
+        abort(403)
+    
+    form = GoalForm()
+    if form.validate_on_submit():
+        goal = Goal(
+            user_id=current_user.id,
+            goal_type=form.goal_type.data,
+            description=form.description.data,
+            target_value=form.target_value.data,
+            unit=form.unit.data,
+            end_date=form.end_date.data
+        )
+        db.session.add(goal)
+        db.session.commit()
+        flash('Goal added successfully!', 'success')
+        return redirect(url_for('main.list_goals'))
+    return render_template('goals/form.html', title='Add New Goal', form=form)
+
+@bp.route('/goals/edit/<int:goal_id>', methods=['GET', 'POST'])
+@login_required
+def edit_goal(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
+    
+    if current_user.role == 'subscription' and (goal.user_id != current_user.id or goal.is_admin_set):
+        flash('Access denied. You can only edit your own non-admin-set goals.', 'danger')
+        abort(403)
+    
+    if current_user.role == 'admin' and goal.is_admin_set:
+        # Admins can edit their own admin-set goals, or any user's goals
+        pass
+    elif current_user.role == 'admin' and not goal.is_admin_set:
+        # Admins can edit user-set goals
+        pass
+    elif current_user.role == 'subscription' and goal.user_id == current_user.id and not goal.is_admin_set:
+        # Users can edit their own non-admin-set goals
+        pass
+    else:
+        flash('Access denied.', 'danger')
+        abort(403)
+
+    form = GoalForm(obj=goal)
+    if form.validate_on_submit():
+        goal.goal_type = form.goal_type.data
+        goal.description = form.description.data
+        goal.target_value = form.target_value.data
+        goal.unit = form.unit.data
+        goal.end_date = form.end_date.data
+        goal.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Goal updated successfully!', 'success')
+        return redirect(url_for('main.list_goals'))
+    return render_template('goals/form.html', title='Edit Goal', form=form)
+
+@bp.route('/goals/delete/<int:goal_id>', methods=['POST'])
+@login_required
+def delete_goal(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
+    
+    if current_user.role == 'subscription' and (goal.user_id != current_user.id or goal.is_admin_set):
+        flash('Access denied. You can only delete your own non-admin-set goals.', 'danger')
+        abort(403)
+    
+    if current_user.role == 'admin' and goal.is_admin_set:
+        pass # Admins can delete their own admin-set goals, or any user's goals
+    elif current_user.role == 'admin' and not goal.is_admin_set:
+        pass # Admins can delete user-set goals
+    elif current_user.role == 'subscription' and goal.user_id == current_user.id and not goal.is_admin_set:
+        pass # Users can delete their own non-admin-set goals
+    else:
+        flash('Access denied.', 'danger')
+        abort(403)
+
+    db.session.delete(goal)
+    db.session.commit()
+    flash('Goal deleted successfully!', 'success')
+    return redirect(url_for('main.list_goals'))
+
+@bp.route('/goals/update_progress/<int:goal_id>', methods=['POST'])
+@login_required
+def update_goal_progress(goal_id):
+    goal = Goal.query.get_or_404(goal_id)
+    
+    if current_user.role == 'subscription' and (goal.user_id != current_user.id or goal.is_admin_set):
+        flash('Access denied. You can only update progress for your own non-admin-set goals.', 'danger')
+        abort(403)
+    
+    if current_user.role == 'admin' and goal.is_admin_set:
+        pass # Admins can update progress for their own admin-set goals, or any user's goals
+    elif current_user.role == 'admin' and not goal.is_admin_set:
+        pass # Admins can update progress for user-set goals
+    elif current_user.role == 'subscription' and goal.user_id == current_user.id and not goal.is_admin_set:
+        pass # Users can update progress for their own non-admin-set goals
+    else:
+        flash('Access denied.', 'danger')
+        abort(403)
+
+    try:
+        new_progress = float(request.form.get('progress'))
+        goal.current_value = new_progress
+        goal.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Goal progress updated successfully!', 'success')
+    except ValueError:
+        flash('Invalid progress value.', 'danger')
+    
+    return redirect(url_for('main.list_goals'))
+
+# --- Goal Management Routes (Admin) ---
+
+@bp.route('/admin/goals')
+@login_required
+def admin_list_goals():
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    
+    all_users = User.query.order_by(User.username).all()
+    selected_user_id = request.args.get('user_id', type=int)
+
+    goals_query = Goal.query.order_by(Goal.end_date.desc())
+
+    if selected_user_id:
+        goals_query = goals_query.filter_by(user_id=selected_user_id)
+    
+    goals = goals_query.all()
+
+    # Prepare data for category-based charting
+    chart_data_by_type = {}
+    goal_types = ['daily', 'weekly', 'monthly', 'yearly']
+
+    for goal_type in goal_types:
+        filtered_goals = [g for g in goals if g.goal_type == goal_type]
+        if filtered_goals:
+            chart_data_by_type[goal_type] = {
+                'labels': [f"{g.user.username}: {g.description}" for g in filtered_goals],
+                'current_values': [g.current_value for g in filtered_goals],
+                'target_values': [g.target_value for g in filtered_goals]
+            }
+
+    return render_template('goals/admin_list.html', title='All User Goals', goals=goals,
+                           chart_data_by_type=chart_data_by_type,
+                           all_users=all_users,
+                           selected_user_id=selected_user_id)
+
+@bp.route('/admin/goals/add', methods=['GET', 'POST'])
+@login_required
+def admin_add_goal():
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    
+    form = AdminGoalForm()
+    if form.validate_on_submit():
+        goal = Goal(
+            user_id=form.user.data,
+            goal_type=form.goal_type.data,
+            description=form.description.data,
+            target_value=form.target_value.data,
+            unit=form.unit.data,
+            end_date=form.end_date.data,
+            is_admin_set=form.is_admin_set.data,
+            is_beginner_goal=form.is_beginner_goal.data
+        )
+        db.session.add(goal)
+        db.session.commit()
+        flash('Admin goal added successfully!', 'success')
+        return redirect(url_for('main.admin_list_goals'))
+    return render_template('goals/admin_form.html', title='Add Admin Goal', form=form)
+
+@bp.route('/admin/goals/edit/<int:goal_id>', methods=['GET', 'POST'])
+@login_required
+def admin_edit_goal(goal_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    
+    goal = Goal.query.get_or_404(goal_id)
+    form = AdminGoalForm(obj=goal)
+    if form.validate_on_submit():
+        goal.user_id = form.user.data
+        goal.goal_type = form.goal_type.data
+        goal.description = form.description.data
+        goal.target_value = form.target_value.data
+        goal.unit = form.unit.data
+        goal.end_date = form.end_date.data
+        goal.is_admin_set = form.is_admin_set.data
+        goal.is_beginner_goal = form.is_beginner_goal.data
+        goal.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Goal updated successfully!', 'success')
+        return redirect(url_for('main.admin_list_goals'))
+    return render_template('goals/admin_form.html', title='Edit Admin Goal', form=form)
+
+@bp.route('/admin/goals/delete/<int:goal_id>', methods=['POST'])
+@login_required
+def admin_delete_goal(goal_id):
+    if current_user.role != 'admin':
+        flash('Access denied. Admins only.', 'danger')
+        abort(403)
+    
+    goal = Goal.query.get_or_404(goal_id)
+    db.session.delete(goal)
+    db.session.commit()
+    flash('Goal deleted successfully!', 'success')
+    return redirect(url_for('main.admin_list_goals'))

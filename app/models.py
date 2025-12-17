@@ -101,6 +101,8 @@ class User(db.Model, UserMixin):
     member_id = db.Column(db.Integer, db.ForeignKey('member.id'), nullable=True) # New field
     member = db.relationship('Member', backref='user', uselist=False) # Relationship
 
+    goals = db.relationship('Goal', backref='author', lazy='dynamic')
+
     def set_password(self, password):
         self.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
@@ -109,3 +111,24 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f'<User {self.username}>'
+
+class Goal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    goal_type = db.Column(db.String(20), nullable=False)  # e.g., 'daily', 'weekly', 'monthly', 'yearly'
+    description = db.Column(db.String(255), nullable=False)
+    target_value = db.Column(db.Float, nullable=False)
+    current_value = db.Column(db.Float, default=0.0)
+    unit = db.Column(db.String(50), nullable=False) # e.g., 'workouts', 'calories', 'kg', 'minutes'
+    start_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_admin_set = db.Column(db.Boolean, default=False)
+    is_beginner_goal = db.Column(db.Boolean, default=False) # If this goal is specifically for beginners
+    status = db.Column(db.String(20), default='active') # e.g., 'active', 'completed', 'failed'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('goals_set', lazy=True))
+
+    def __repr__(self):
+        return f'<Goal {self.description} for User {self.user_id}>'

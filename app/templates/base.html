@@ -16,6 +16,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     {# Custom CSS #}
     <title>Gym House Management System - {{ title }}</title>
   </head>
@@ -80,6 +81,11 @@
                 >Workout Plans</a
               >
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.admin_list_goals') }}"
+                >Goals</a
+              >
+            </li>
             {% elif current_user.role == 'subscription' %}
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('main.list_plans') }}"
@@ -109,6 +115,11 @@
               >
             </li>
             <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('main.list_goals') }}"
+                >My Goals</a
+              >
+            </li>
+            <li class="nav-item">
               {% if current_user.member_id %}
               <a class="nav-link" href="{{ url_for('main.view_member', member_id=current_user.member_id) }}">My Profile</a>
               {% endif %}
@@ -133,7 +144,7 @@
     </nav>
 
     <main class="flex-grow-1">
-      <div class="container mt-4">
+      <div class="container py-4"> {# Added py-4 for consistent vertical padding #}
         {% with messages = get_flashed_messages(with_categories=true) %} {% if
       messages %} {% for category, message in messages %}
         <div class="alert alert-{{ category }}">{{ message }}</div>
@@ -141,10 +152,10 @@
       </div>
     </main>
 
-    <footer class="bg-dark text-white text-center py-3">
+    <footer class="bg-dark text-white text-center py-4"> {# Increased vertical padding #}
       <div class="container">
-        <p>&copy; 2025 Gym House. All rights reserved.</p>
-        <p>Contact: info@gymhouse.com | Phone: (123) 456-7890</p>
+        <p class="mb-0">&copy; 2025 Gym House. All rights reserved.</p> {# Removed bottom margin #}
+        <p class="mb-0">Contact: info@gymhouse.com | Phone: (123) 456-7890</p>
       </div>
     </footer>
 

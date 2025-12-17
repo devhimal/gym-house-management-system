@@ -1,22 +1,48 @@
 /* Custom styles for Gym House */
 
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
 /* General body styling */
 body {
+    font-family: 'Roboto', sans-serif;
     background-color: #f8f9fa; /* Light gray background */
     color: #343a40; /* Dark text */
+    line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+p {
+    margin-bottom: 1rem;
 }
 
 /* Navbar styling */
 .navbar {
     background-color: #212529 !important; /* Darker navbar */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .navbar-brand, .nav-link {
     color: #ffffff !important; /* White text for navbar links */
+    font-weight: 400;
+    transition: color 0.3s ease;
 }
 
 .navbar-brand:hover, .nav-link:hover {
     color: #ffc107 !important; /* Yellow on hover */
+}
+
+.navbar-toggler {
+    border-color: rgba(255,255,255,0.1);
+}
+
+.navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* Jumbotron/Hero Section */
@@ -25,12 +51,28 @@ body {
     color: #ffffff !important; /* White text */
     padding: 6rem 0;
     margin-bottom: 0; /* Remove default margin */
+    text-align: center;
+}
+
+.jumbotron h1 {
+    color: #ffffff;
+    font-size: 3.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.jumbotron p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
 }
 
 .jumbotron .btn-primary {
     background-color: #ffc107; /* Yellow CTA button */
     border-color: #ffc107;
     color: #212529; /* Dark text on yellow button */
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .jumbotron .btn-primary:hover {
@@ -42,6 +84,10 @@ body {
     background-color: #6c757d; /* Gray secondary button */
     border-color: #6c757d;
     color: #ffffff;
+    font-weight: 400;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.3rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .jumbotron .btn-secondary:hover {
@@ -53,12 +99,20 @@ body {
 .card {
     border: none;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border-radius: 0.5rem;
+    overflow: hidden; /* Ensures content respects border-radius */
 }
 
 .card-header {
     background-color: #007bff; /* Blue header for cards */
     color: #ffffff;
     font-weight: bold;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+
+.card-body {
+    padding: 1.25rem;
 }
 
 /* Specific card colors for dashboard */
@@ -67,5 +121,71 @@ body {
 .card.bg-info .card-header { background-color: #17a2b8 !important; }
 .card.bg-warning .card-header { background-color: #ffc107 !important; }
 .card.bg-danger .card-header { background-color: #dc3545 !important; }
+
+/* Form styling */
+.form-control {
+    border-radius: 0.3rem;
+    border: 1px solid #ced4da;
+    padding: 0.75rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn {
+    border-radius: 0.3rem;
+    padding: 0.75rem 1.25rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+    border-color: #c82333;
+}
+
+/* Footer styling */
+footer {
+    background-color: #212529 !important;
+    color: #adb5bd;
+    padding: 2rem 0;
+    margin-top: auto; /* Pushes footer to the bottom */
+}
+
+footer p {
+    margin-bottom: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .jumbotron h1 {
+        font-size: 2.5rem;
+    }
+
+    .jumbotron p {
+        font-size: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
 
 

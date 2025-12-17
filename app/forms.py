@@ -122,3 +122,22 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
+
+class GoalForm(FlaskForm):
+    goal_type = SelectField('Goal Type', choices=[('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('yearly', 'Yearly')], validators=[DataRequired()])
+    description = StringField('Description', validators=[DataRequired()])
+    target_value = FloatField('Target Value', validators=[DataRequired(), NumberRange(min=0)])
+    unit = StringField('Unit (e.g., workouts, kg, minutes)', validators=[DataRequired()])
+    end_date = DateField('End Date (for Weekly/Monthly/Yearly goals)', format='%Y-%m-%d', validators=[Optional()])
+    submit = SubmitField('Set Goal')
+
+class AdminGoalForm(GoalForm):
+    user = SelectField('Assign to User', coerce=int, validators=[DataRequired()])
+    is_beginner_goal = BooleanField('Mark as Beginner Goal')
+    is_admin_set = BooleanField('Admin Set Goal (Non-editable by User)')
+    submit = SubmitField('Set Admin Goal')
+
+    def __init__(self, *args, **kwargs):
+        super(AdminGoalForm, self).__init__(*args, **kwargs)
+        self.user.choices = [(u.id, u.username) for u in User.query.order_by('username').all()]
+        self.user.choices.insert(0, (0, 'Select a user'))
